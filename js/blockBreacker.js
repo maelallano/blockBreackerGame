@@ -1,5 +1,23 @@
 var ctx = document.getElementById("canvas").getContext("2d")
 
+var start = 0
+
+function menu() {
+	ctx.font = "35px Helvetica"
+    ctx.fillText("Welcome to my blockBreacker game !", 4, 60)
+	ctx.font = "27px Helvetica"
+    ctx.fillText("Press 'a' to start the game !", 130, 240)
+	ctx.font = "27px Helvetica"
+
+	addEventListener('keydown', function(e) {
+		if (e.keyCode === 65) {
+			start = 1
+		}
+	})
+}
+
+
+
 function Balls(abs, ord) {
 	this.r = 10
 	this.x = abs
@@ -14,35 +32,52 @@ function Balls(abs, ord) {
 
 	this.draw = function() {
 		ctx.beginPath()
+		ctx.fillStyle = 'black'
         ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2)
         ctx.fill()
         ctx.closePath()
 	}
 }
 
-function Blocks(abs, ord) {
+function Blocks(abs, ord, color=0) {
 	this.w = 40
 	this.h = 20
 	this.x = abs
 	this.y = ord
+	this.wesh = color
 
 	this.draw = function() {
-		ctx.fillRect(this.x, this.y, this.w, this.h)
+		if (this.wesh === 1) {
+			ctx.fillStyle = 'red'
+			ctx.fillRect(this.x, this.y, this.w, this.h)
+		} else {
+			ctx.fillStyle = 'black'
+			ctx.fillRect(this.x, this.y, this.w, this.h)
+		}
 	}
 }
 
 blocks = []
-blocks.push(new Blocks(5, 5))
 
 var col = 12
 var row = 10
 var space = 10
 
-for (i = 0; i < col; i++) {
-	for (j = 0; j < row; j++) {
-		blocks.push(new Blocks(space/2 + ((blocks[0].w + space) * i), space/2 + ((blocks[0].h + space) * j)))
+function level1() {
+	blocks.push(new Blocks(-100, 0))
+	for (i = 0; i < 10; i++) {
+		for (j = 0; j < 8; j++) {
+			blocks.push(new Blocks(45 + ((blocks[0].w + space) * i), 30 + ((blocks[0].h + space) * j)))
+		}
+	}
+	for (j = 0; j < 10; j++) {
+		blocks.push(new Blocks(45 + ((blocks[0].w + space) * j), 30 + ((blocks[0].h + space) * 8)))
+		blocks.push(new Blocks(45 + ((blocks[0].w + space) * j), 30 + ((blocks[0].h + space) * 8), 1))
 	}
 }
+
+level1()
+
 
 var paddle = {
 	w: 100,
@@ -56,6 +91,7 @@ var paddle = {
 	},
 
 	draw: function() {
+		ctx.fillStyle = 'black'
 		ctx.fillRect(this.x, this.y, this.w, this.h)
 	}
 }
@@ -85,7 +121,7 @@ function move() {
 }
 
 balls = []
-balls.push(new Balls(paddle.x + paddle.w/2, paddle.y - 10))
+balls.push(new Balls(paddle.x + paddle.w/2, paddle.y - 260))
 
 function impact() {
 	for (i = 0; i < balls.length; i++) {
@@ -100,10 +136,10 @@ function impact() {
 		if (balls[i].y + paddle.h > paddle.y && (balls[i].x > paddle.x && balls[i].x < paddle.x + paddle.w)) {
 			balls[i].yV *= -1
 			//effets paddle
-			if (paddle.xV > 0 && balls[i].xV >= 0) {
+			if (paddle.xV > 0) {
 				balls[i].xV = 10
 			}
-			if (paddle.xV < 0 && balls[i].xV <= 0) {
+			if (paddle.xV < 0) {
 				balls[i].xV = -10
 			}
 		}
@@ -147,7 +183,7 @@ function gameOver() {
 	if (!balls[0]) {
 		life--
 		if (life) {
-			balls.push(new Balls(paddle.x + paddle.w/2, paddle.y - 10))
+			balls.push(new Balls(paddle.x + paddle.w/2, paddle.y - 260))
 		} else {
 			console.log("GAME OVER")
 			location.reload()
@@ -159,15 +195,17 @@ function gameOver() {
 addEventListener("keydown", function(e) {
 	if (e.keyCode === 40) {
 		balls[0].yV = -10
+		balls[0].xV = 2
 	}
 	if (e.keyCode === 38) {
 		balls[0].yV = 10
+		balls[0].xV = -2
 	}
 	if (e.keyCode === 39) {
-		paddle.xV = 10
+		paddle.xV = 20
 	}
 	if (e.keyCode === 37) {
-		paddle.xV = -10
+		paddle.xV = -20
 	}
 })
 
@@ -179,9 +217,16 @@ addEventListener("keyup", function(e) {
 
 setInterval(function() {
 	ctx.clearRect(0, 0, canvas.width, canvas.height)
-	move()
-	draw()
-	impact()
-	gameOver()
+	if (start) {
+		move()
+		draw()
+		impact()
+		gameOver()
+	} else {
+		balls[0].draw()
+		paddle.draw()
+		menu()
+	}
 }, 1000/30)
+
 
